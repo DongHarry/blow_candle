@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thổi nến sinh nhật 🎂</title>
+  <style>
+    body {
+      background: #000;
+      color: white;
+      text-align: center;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    #candle {
+      margin-top: 100px;
+      width: 100px;
+      height: 200px;
+      background: orange;
+      border-radius: 10px;
+      margin-left: auto;
+      margin-right: auto;
+      position: relative;
+    }
+    #flame {
+      width: 30px;
+      height: 50px;
+      background: yellow;
+      border-radius: 50% 50% 50% 50%;
+      position: absolute;
+      top: -60px;
+      left: 35px;
+      animation: flicker 0.2s infinite;
+    }
+    @keyframes flicker {
+      0% { transform: scale(1) rotate(0deg); }
+      50% { transform: scale(1.1) rotate(3deg); }
+      100% { transform: scale(1) rotate(-2deg); }
+    }
+    #message {
+      margin-top: 30px;
+      font-size: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Hãy thổi vào micro để tắt nến! 🎉</h1>
+  <div id="candle">
+    <div id="flame"></div>
+  </div>
+  <div id="message"></div>
+
+  <script>
+    const flame = document.getElementById("flame");
+    const message = document.getElementById("message");
+
+    async function detectBlow() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const audioContext = new AudioContext();
+        const source = audioContext.createMediaStreamSource(stream);
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        source.connect(analyser);
+
+        function checkVolume() {
+          analyser.getByteFrequencyData(dataArray);
+          const volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+
+          if (volume > 50) { // ngưỡng âm lượng để "thổi tắt"
+            flame.style.display = "none";
+            message.textContent = "Bạn đã thổi tắt nến rồi! 🕯️✨";
+          } else {
+            requestAnimationFrame(checkVolume);
+          }
+        }
+
+        checkVolume();
+      } catch (err) {
+        message.textContent = "Không thể truy cập micro 😢";
+      }
+    }
+
+    detectBlow();
+  </script>
+</body>
+</html>
